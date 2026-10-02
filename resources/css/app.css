@@ -1,0 +1,12 @@
+:root {
+    --sfl-primary: #2563eb;
+    --sfl-dark: #0f172a;
+    --sfl-sidebar-width: 260px;
+    --sfl-bg: #f4f6fb;
+}
+
+body {
+    background-color: var(--sfl-bg);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: #1e293b;
+}

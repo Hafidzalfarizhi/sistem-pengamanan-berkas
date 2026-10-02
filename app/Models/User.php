@@ -2,48 +2,85 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    public const ROLE_ADMIN = 'administrator';
+    public const ROLE_USER = 'user';
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $fillable = ['name', 'username', 'password', 'role', 'status'];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $hidden = ['password'];
+
     protected function casts(): array
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return ['password' => 'hashed'];
+    }
+
+    // Tabel users tidak memiliki kolom remember_token.
+    public function getRememberTokenName(): string
+    {
+        return '';
+    }
+
+    public function isAdministrator(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    /** Awalan route sesuai role: "admin" atau "user". */
+    public function routePrefix(): string
+    {
+        return $this->isAdministrator() ? 'admin' : 'user';
+    }
+
+    /** Nama route sesuai role, contoh: routeName('files.index') => admin.files.index */
+    public function routeName(string $name): string
+    {
+        return $this->routePrefix() . '.' . $name;
+    }
+
+    public function getRoleLabelAttribute(): string
+    {
+        return $this->isAdministrator() ? 'Administrator' : 'User';
+    }
+
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        if ($term === null || trim($term) === '') {
+            return $query;
+        }
+
+        $like = '%' . addcslashes(trim($term), '%_\\') . '%';
+
+        return $query->where(fn (Builder $q) => $q->where('name', 'like', $like)->orWhere('username', 'like', $like));
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(File::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
     }
 }

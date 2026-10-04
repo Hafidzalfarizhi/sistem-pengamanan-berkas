@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -32,9 +33,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware('role:administrator')->group(function () use ($shared) {
         $shared();
 
-        // ===== SEMENTARA: diganti route asli di Tahap 10 =====
-        Route::get('/users', fn () => view('sementara', ['judul' => 'Manajemen User', 'tahap' => 10]))->name('users.index');
-        Route::get('/users/create', fn () => view('sementara', ['judul' => 'Tambah User', 'tahap' => 10]))->name('users.create');
+        Route::resource('users', UserManagementController::class)->except(['show']);
+        Route::patch('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle');
     });
 
     Route::prefix('user')->name('user.')->middleware('role:user')->group($shared);

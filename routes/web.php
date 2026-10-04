@@ -1,41 +1,41 @@
 <?php
 
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-// ===== SEMENTARA UNTUK TAHAP 8: file ini diganti seluruhnya di Tahap 9 =====
+Route::redirect('/', '/login');
 
-Route::get('/', fn () => redirect('/uji-tampilan'));
-Route::get('/login', fn () => 'Halaman login (dibuat di Tahap 9)')->name('login');
-Route::get('/dashboard', fn () => redirect('/uji-tampilan'))->name('dashboard');
-Route::post('/logout', fn () => redirect('/login'))->name('logout');
-
-// Route kosong agar semua tautan sidebar tidak error.
-foreach (['admin', 'user'] as $prefix) {
-    foreach (['dashboard', 'encrypt.index', 'decrypt.index', 'files.index', 'history.index', 'notifications.index', 'guide', 'profile.edit'] as $name) {
-        Route::get('/' . $prefix . '/' . str_replace('.', '-', $name), fn () => 'Halaman ' . $name . ' (dibuat di tahap berikutnya)')
-            ->name($prefix . '.' . $name);
-    }
-}
-Route::get('/admin/users', fn () => 'Manajemen User (dibuat di Tahap 10)')->name('admin.users.index');
-
-// Halaman uji.
-Route::get('/uji-tampilan', function () {
-    $role = request('role') === 'user' ? 'user' : 'administrator';
-    $user = User::where('role', $role)->first() ?? User::first();
-    Auth::login($user);
-
-    return view('uji-tampilan');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.attempt');
 });
-Route::get('/uji-toast', fn () => redirect('/uji-tampilan')
-    ->with('success', 'Toast sukses tampil.')
-    ->with('error', 'Toast error tampil.')
-    ->with('info', 'Toast info tampil.'));
-Route::post('/uji-konfirmasi', fn () => redirect('/uji-tampilan')->with('success', 'Konfirmasi diterima, form terkirim.'));
-Route::post('/uji-loading', function () {
-    sleep(3);
 
-    return redirect('/uji-tampilan')->with('success', 'Proses selesai.');
+Route::middleware(['auth', 'active'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/dashboard', [DashboardController::class, 'redirect'])->name('dashboard');
+
+    // Rute yang sama dipakai Administrator (/admin/...) dan User (/user/...).
+    $shared = function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // ===== SEMENTARA: diganti route asli di tahap berikutnya =====
+        Route::get('/enkripsi', fn () => view('sementara', ['judul' => 'Enkripsi File', 'tahap' => 11]))->name('encrypt.index');
+        Route::get('/dekripsi', fn () => view('sementara', ['judul' => 'Dekripsi File', 'tahap' => 11]))->name('decrypt.index');
+        Route::get('/files', fn () => view('sementara', ['judul' => 'File Saya', 'tahap' => 11]))->name('files.index');
+        Route::get('/riwayat', fn () => view('sementara', ['judul' => 'Riwayat', 'tahap' => 12]))->name('history.index');
+        Route::get('/notifications', fn () => view('sementara', ['judul' => 'Notifikasi', 'tahap' => 12]))->name('notifications.index');
+        Route::get('/panduan', fn () => view('sementara', ['judul' => 'Panduan Penggunaan', 'tahap' => 12]))->name('guide');
+        Route::get('/profile', fn () => view('sementara', ['judul' => 'Profil', 'tahap' => 12]))->name('profile.edit');
+    };
+
+    Route::prefix('admin')->name('admin.')->middleware('role:administrator')->group(function () use ($shared) {
+        $shared();
+
+        // ===== SEMENTARA: diganti route asli di Tahap 10 =====
+        Route::get('/users', fn () => view('sementara', ['judul' => 'Manajemen User', 'tahap' => 10]))->name('users.index');
+        Route::get('/users/create', fn () => view('sementara', ['judul' => 'Tambah User', 'tahap' => 10]))->name('users.create');
+    });
+
+    Route::prefix('user')->name('user.')->middleware('role:user')->group($shared);
 });
-Route::get('/uji-error/{code}', fn (int $code) => abort($code))->whereIn('code', [403, 404, 419, 429, 500, 503]);

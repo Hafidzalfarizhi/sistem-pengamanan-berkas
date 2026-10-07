@@ -1,7 +1,14 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DecryptionController;
+use App\Http\Controllers\EncryptionController;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\GuideController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,14 +27,29 @@ Route::middleware(['auth', 'active'])->group(function () {
     $shared = function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // ===== SEMENTARA: diganti route asli di tahap berikutnya =====
-        Route::get('/enkripsi', fn () => view('sementara', ['judul' => 'Enkripsi File', 'tahap' => 11]))->name('encrypt.index');
-        Route::get('/dekripsi', fn () => view('sementara', ['judul' => 'Dekripsi File', 'tahap' => 11]))->name('decrypt.index');
-        Route::get('/files', fn () => view('sementara', ['judul' => 'File Saya', 'tahap' => 11]))->name('files.index');
-        Route::get('/riwayat', fn () => view('sementara', ['judul' => 'Riwayat', 'tahap' => 12]))->name('history.index');
-        Route::get('/notifications', fn () => view('sementara', ['judul' => 'Notifikasi', 'tahap' => 12]))->name('notifications.index');
-        Route::get('/panduan', fn () => view('sementara', ['judul' => 'Panduan Penggunaan', 'tahap' => 12]))->name('guide');
-        Route::get('/profile', fn () => view('sementara', ['judul' => 'Profil', 'tahap' => 12]))->name('profile.edit');
+        Route::get('/enkripsi', [EncryptionController::class, 'index'])->name('encrypt.index');
+        Route::post('/enkripsi', [EncryptionController::class, 'store'])->name('encrypt.store');
+
+        Route::get('/dekripsi', [DecryptionController::class, 'index'])->name('decrypt.index');
+        Route::post('/dekripsi', [DecryptionController::class, 'store'])->name('decrypt.store');
+
+        Route::get('/files', [FileController::class, 'index'])->name('files.index');
+        Route::get('/files/{file}', [FileController::class, 'show'])->name('files.show');
+        Route::get('/files/{file}/download', [FileController::class, 'download'])->name('files.download');
+        Route::delete('/files/{file}', [FileController::class, 'destroy'])->name('files.destroy');
+
+        Route::get('/riwayat', [ActivityLogController::class, 'index'])->name('history.index');
+        Route::get('/riwayat/{activityLog}', [ActivityLogController::class, 'show'])->name('history.show');
+
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+
+        Route::get('/panduan', [GuideController::class, 'index'])->name('guide');
+
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     };
 
     Route::prefix('admin')->name('admin.')->middleware('role:administrator')->group(function () use ($shared) {

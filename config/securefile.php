@@ -30,9 +30,9 @@ return [
     'allowed_mimes' => [
         'txt'  => ['text/plain'],
         'pdf'  => ['application/pdf'],
-        'doc'  => ['application/msword', 'application/vnd.ms-office', 'application/x-cfb', 'application/octet-stream'],
+        'doc'  => ['application/msword', 'application/vnd.ms-office', 'application/x-cfb', 'application/CDFV2', 'application/x-ole-storage', 'application/octet-stream'],
         'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
-        'xls'  => ['application/vnd.ms-excel', 'application/vnd.ms-office', 'application/x-cfb', 'application/octet-stream'],
+        'xls'  => ['application/vnd.ms-excel', 'application/vnd.ms-office', 'application/x-cfb', 'application/CDFV2', 'application/x-ole-storage', 'application/octet-stream'],
         'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip'],
         'jpg'  => ['image/jpeg'],
         'jpeg' => ['image/jpeg'],
@@ -58,7 +58,7 @@ return [
         'decrypted' => 'dekripsi',
         'temporary' => 'sementara',
     ],
-    
+
     /*
     |--------------------------------------------------------------------------
     | Ukuran blok baca file (byte) untuk pemrosesan bertahap
